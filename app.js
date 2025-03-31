@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
-
+const multer = require('multer');
+const upload = multer(); // Multer middleware for file upload
 
 const app = express();
 
@@ -99,7 +100,16 @@ app.get('/', (req, res) => {
 });
 
 // Endpoint to handle file uploads
-
+app.post('/upload', upload.none(), (req, res) => {
+    try {
+        // You can process the uploaded files here
+        console.log(req.body);
+        res.json({ message: 'Files uploaded successfully!' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Failed to upload files.' });
+    }
+});
 
 // Start the server
 const PORT = process.env.PORT || 3000;
