@@ -23,7 +23,7 @@ app.get('/', async (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>File Upload to Azure Blob Storage</title>
+            <title>File Upload2 to Azure Blob Storage</title>
             <style>
                 /* Add your CSS styles here */
             </style>
