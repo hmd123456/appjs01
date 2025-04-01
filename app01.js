@@ -7,15 +7,7 @@ const upload = multer(); // Multer middleware for file upload
 const app = express();
 
 // MSAL configuration
-const msalConfig = {
-    auth: {
-        clientId: 'YOUR_CLIENT_ID', // Replace with your Azure AD App's Client ID
-        authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // Replace with your Tenant ID
-        clientSecret: 'YOUR_CLIENT_SECRET' // Replace with your Azure AD App's Client Secret
-    }
-};
-
-const pca = new PublicClientApplication(msalConfig);
+ 
 
 // Middleware to serve static files (CSS/JS)
 app.use(express.static(path.join(__dirname, 'public')));
