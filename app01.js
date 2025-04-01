@@ -1,15 +1,30 @@
 const express = require('express');
 const path = require('path');
-
 const multer = require('multer');
+const { PublicClientApplication } = require('@azure/msal-node'); // MSAL for Entra authentication
+
 const upload = multer(); // Multer middleware for file upload
 const app = express();
+
+// MSAL configuration
+const msalConfig = {
+    auth: {
+        clientId: 'YOUR_CLIENT_ID', // Replace with your Azure AD App's Client ID
+        authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // Replace with your Tenant ID
+        clientSecret: 'YOUR_CLIENT_SECRET' // Replace with your Azure AD App's Client Secret
+    }
+};
+
+const pca = new PublicClientApplication(msalConfig);
 
 // Middleware to serve static files (CSS/JS)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Route to serve the HTML content
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+    // Simulate fetching the logged-in user's name
+    const userName = req.query.name || 'Guest'; // Replace this with actual user info from MSAL
+
     res.send(`
         <!DOCTYPE html>
         <html lang="en">
@@ -45,7 +60,8 @@ app.get('/', (req, res) => {
             <!-- Main content area -->
             <div class="main-content">
                 <div class="form-container">
-                    <h1>Upload Files to Azure Blob Storage</h1>
+                    <h1>Welcome, ${userName}!</h1>
+                    <h2>Upload Files to Azure Blob Storage</h2>
                     <form id="uploadForm" enctype="multipart/form-data">
                         <div>
                             <label for="section1">Section 1:</label>
@@ -107,4 +123,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-

@@ -1,0 +1,16 @@
+
+      --------------------------------------
+      Error Stack:: "Error: Please set up the FDK path to proceed, you can set up the path from settings.\n    at a.FdkHelper.getfdkPathFromConfig (c:\\Users\\mdeglurkar\\.vscode\\extensions\\freshworksmarketplace.freddy-copilot-2.3.3\\dist\\extension.js:2:81459)\n    at a.FdkHelper.runInBackground (c:\\Users\\mdeglurkar\\.vscode\\extensions\\freshworksmarketplace.freddy-copilot-2.3.3\\dist\\extension.js:2:82794)\n    at a.FdkHelper.getFdkVersion (c:\\Users\\mdeglurkar\\.vscode\\extensions\\freshworksmarketplace.freddy-copilot-2.3.3\\dist\\extension.js:2:78609)\n    at m.getFdkVersion (c:\\Users\\mdeglurkar\\.vscode\\extensions\\freshworksmarketplace.freddy-copilot-2.3.3\\dist\\extension.js:2:140624)\n    at m.resolveWebviewView (c:\\Users\\mdeglurkar\\.vscode\\extensions\\freshworksmarketplace.freddy-copilot-2.3.3\\dist\\extension.js:2:120450)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at DW.$resolveWebviewView (file:///c:/Users/mdeglurkar/AppData/Local/Programs/Microsoft%20VS%20Code/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:172:24592)"
+      Error Message:: "Please set up the FDK path to proceed, you can set up the path from settings."
+      Error Name:: "Error"
+      
+      
+      
+      
+      
+      
+
+      Timestamp:: Tue, 01 Apr 2025 13:40:52 GMT
+      Extension Version:: 2.3.3
+      --------------------------------------
+    
