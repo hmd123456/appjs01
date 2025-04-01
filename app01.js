@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-const { PublicClientApplication } = require('@azure/msal-node'); // MSAL for Entra authentication
+
 
 const upload = multer(); // Multer middleware for file upload
 const app = express();
