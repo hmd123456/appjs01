@@ -1,13 +1,21 @@
 const express = require('express');
 const path = require('path');
 const multer = require('multer');
-
+const { PublicClientApplication } = require('@azure/msal-node'); // MSAL for Entra authentication
 
 const upload = multer(); // Multer middleware for file upload
 const app = express();
 
 // MSAL configuration
- 
+const msalConfig = {
+    auth: {
+        clientId: '3bcc88e2-9967-4de9-b428-b6ab48db19ae', // Replace with your Azure AD App's Client ID
+        authority: 'https://login.microsoftonline.com/5558459a-5e38-45de-8742-ec475127560c', // Replace with your Tenant ID
+        clientSecret: '2a051337-3580-4f04-be0b-5b58d9d0dc73' // Replace with your Azure AD App's Client Secret
+    }
+};
+
+const pca = new PublicClientApplication(msalConfig);
 
 // Middleware to serve static files (CSS/JS)
 app.use(express.static(path.join(__dirname, 'public')));
@@ -23,7 +31,7 @@ app.get('/', async (req, res) => {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>File Upload2 to Azure Blob Storage</title>
+            <title>File Upload to Azure Blob Storage</title>
             <style>
                 /* Add your CSS styles here */
             </style>
