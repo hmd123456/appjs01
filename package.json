@@ -3,16 +3,16 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-     "start": "node app01.js"
+    "start": "node app01.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@azure/msal-node": "^3.4.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "multer": "^1.4.4-lts.1" 
+    "multer": "^1.4.4-lts.1"
   }
 }
-  
