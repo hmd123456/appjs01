@@ -1,7 +1,8 @@
 const express = require('express');
 const path = require('path');
 
-
+const multer = require('multer');
+const upload = multer(); // Multer middleware for file upload
 const app = express();
 
 // Middleware to serve static files (CSS/JS)
