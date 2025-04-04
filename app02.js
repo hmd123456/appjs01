@@ -47,7 +47,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
         scopes: ['user.read'],
-        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
         state: uuidv4() // Add state parameter for security
     };
 
