@@ -41,7 +41,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
         scopes: ['user.read'],
-        redirectUri: 'http://nodejs01appservice-acgxbsa4f9byaxat.uksouth-01.azurewebsites.net/auth/callback',
+        redirectUri: 'https://nodejs01appservice-acgxbsa4f9byaxat.uksouth-01.azurewebsites.net/auth/callback',
     };
 
     pca.getAuthCodeUrl(authCodeUrlParameters)
