@@ -3,16 +3,17 @@ const path = require('path');
 const multer = require('multer');
 const session = require('express-session');
 const { PublicClientApplication } = require('@azure/msal-node');
+const { v4: uuidv4 } = require('uuid'); // For generating state
 
 const upload = multer();
 const app = express();
 
-// MSAL configuration
+// MSAL Configuration (Replace placeholders with your actual values)
 const msalConfig = {
     auth: {
-        clientId: '3bcc88e2-9967-4de9-b428-b6ab48db19ae', // Replace with your Azure AD App's Client ID
-        authority: '5558459a-5e38-45de-8742-ec475127560c', // Replace with your Tenant ID
-        clientSecret: '2a051337-3580-4f04-be0b-5b58d9d0dc73' // Replace with your Azure AD App's Client Secret
+        clientId: 'YOUR_CLIENT_ID', // Replace with your Azure AD App's Client ID
+        authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // Replace with your Tenant ID
+        clientSecret: 'YOUR_CLIENT_SECRET' // Replace with your Azure AD App's Client Secret
     },
     system: {
         loggerOptions: {
@@ -27,59 +28,93 @@ const msalConfig = {
 
 const pca = new PublicClientApplication(msalConfig);
 
-// Session middleware
+// Session Middleware Configuration
 app.use(session({
-    secret: 'your_secret_key', // Replace with a strong secret key
+    secret: 'YOUR_STRONG_SECRET_KEY', // Replace with a strong, unique secret key
     resave: false,
     saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production', // Ensure secure cookies in production
+        httpOnly: true, // Prevent client-side JavaScript from accessing cookies
+        maxAge: 3600000 // Example: 1 hour session duration (in milliseconds)
+    }
 }));
 
 // Middleware to serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Login route
+// Login Route
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
         scopes: ['user.read'],
-        redirectUri: 'https://nodejs01appservice-acgxbsa4f9byaxat.uksouth-01.azurewebsites.net/auth/callback',
+        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        state: uuidv4() // Add state parameter for security
     };
 
     pca.getAuthCodeUrl(authCodeUrlParameters)
         .then((response) => {
+            req.session.authCodeRequest = { state: authCodeUrlParameters.state }; // Store state for validation
             res.redirect(response);
         })
         .catch((error) => {
-            console.error(error);
-            res.send('Authentication error');
+            console.error('Error generating auth code URL:', error);
+            res.status(500).send('Authentication error: Could not initiate login.');
         });
 });
 
-// Callback route
+// Callback Route
 app.get('/auth/callback', async (req, res) => {
+    const { code, state, error, error_description } = req.query;
+
+    if (error) {
+        console.error('Authentication callback error:', error, error_description);
+        return res.status(401).send(`Authentication error: ${error_description}`);
+    }
+
+    if (!code || !state || !req.session.authCodeRequest || req.session.authCodeRequest.state !== state) {
+        console.error('Invalid authentication callback - missing code, state, or state mismatch.');
+        return res.status(400).send('Authentication error: Invalid callback.');
+    }
+
     const tokenRequest = {
-        code: req.query.code,
+        code,
         scopes: ['user.read'],
-        redirectUri: 'https://nodejs01appservice-acgxbsa4f9byaxat.uksouth-01.azurewebsites.net/auth/callback',
+        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        state
     };
 
     try {
         const response = await pca.acquireTokenByCode(tokenRequest);
         req.session.user = response.account;
+        delete req.session.authCodeRequest; // Clear the stored state
         res.redirect('/');
     } catch (error) {
-        console.error(error);
-        res.send('Authentication error');
+        console.error('Error acquiring token:', error);
+        res.status(500).send('Authentication error: Could not retrieve user information.');
     }
 });
 
-// Main route
+// Logout Route
+app.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.status(500).send('Error logging out.');
+        }
+        res.redirect('/'); // Redirect to the homepage or a logout success page
+    });
+});
+
+// Main Route
 app.get('/', async (req, res) => {
     let userName = 'Guest';
     let loginLink = '<a href="/login">Login</a>';
+    let logoutLink = '';
 
     if (req.session.user) {
-        userName = req.session.user.username;
-        loginLink = ''; // Remove the login link if logged in
+        userName = req.session.user.username || req.session.user.name; // Try to get username or name
+        loginLink = '';
+        logoutLink = '<a href="/logout">Logout</a>';
     }
 
     res.send(`
@@ -97,9 +132,10 @@ app.get('/', async (req, res) => {
             <div class="top-nav">
                 <h1>Azure File Upload</h1>
                 <ul>
-                    <li><a href="#">Home</a></li>
+                    <li><a href="/">Home</a></li>
                     <li><a href="#">About</a></li>
                     <li><a href="#">Contact</a></li>
+                    ${logoutLink}
                 </ul>
             </div>
             <div class="sidebar">
@@ -144,12 +180,38 @@ app.get('/', async (req, res) => {
             <script>
                 async function uploadFiles() {
                     const formData = new FormData(document.getElementById('uploadForm'));
-                    // ... (rest of your uploadFiles function)
+                    try {
+                        const response = await fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        });
+                        const result = await response.json();
+                        if (response.ok) {
+                            alert('Files uploaded successfully!');
+                        } else {
+                            alert(\`Error: \${result.message}\`);
+                        }
+                    } catch (error) {
+                        console.error('Error uploading files:', error);
+                        alert('An error occurred while uploading files.');
+                    }
                 }
             </script>
         </body>
         </html>
     `);
+});
+
+// Endpoint to handle file uploads (You'll need to implement this)
+app.post('/upload', upload.any(), async (req, res) => {
+    try {
+        console.log('Files received:', req.files);
+        // Implement your Azure Blob Storage upload logic here
+        res.json({ message: 'Files uploaded successfully!' });
+    } catch (error) {
+        console.error('Error handling file upload:', error);
+        res.status(500).json({ message: 'Failed to upload files.' });
+    }
 });
 
 // Start the server
