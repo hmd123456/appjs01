@@ -79,7 +79,7 @@ app.get('/auth/callback', async (req, res) => {
     const tokenRequest = {
         code,
         scopes: ['user.read'],
-        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
         state
     };
 
