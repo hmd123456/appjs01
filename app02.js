@@ -59,7 +59,7 @@ app.get('/auth/callback', async (req, res) => {
     const tokenRequest = {
         code: req.query.code,
         scopes: ['user.read'],
-        redirectUri: 'http://localhost:3000/auth/callback',
+        redirectUri: 'https://nodejs01appservice-acgxbsa4f9byaxat.uksouth-01.azurewebsites.net/auth/callback',
     };
 
     try {
