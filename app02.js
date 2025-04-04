@@ -77,7 +77,7 @@ app.get('/auth/callback', async (req, res) => {
     }
 
     const tokenRequest = {
-        code: code,
+        code: req.query.code,
         scopes: ['user.read'],
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
         state: req.session.authCodeRequest.state // Use stored state for validation
