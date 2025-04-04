@@ -80,7 +80,7 @@ app.get('/auth/callback', async (req, res) => {
         code,
         scopes: ['user.read'],
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
-        state
+        state: uuidv4()
     };
 
     try {
