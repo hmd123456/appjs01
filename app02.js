@@ -3,10 +3,13 @@ const path = require('path');
 const multer = require('multer');
 const session = require('express-session');
 const { PublicClientApplication } = require('@azure/msal-node');
-const { v4: uuidv4 } = require('uuid'); // For generating state
+const { v4: uuidv4 } = require('uuid');
 
 const upload = multer();
 const app = express();
+
+// Trust the X-Forwarded-Proto header for correct protocol detection
+app.set('trust proxy', 1);
 
 // MSAL Configuration (Replace placeholders with your actual values)
 const msalConfig = {
@@ -30,13 +33,13 @@ const pca = new PublicClientApplication(msalConfig);
 
 // Session Middleware Configuration
 app.use(session({
-    secret: 'YOUR_STRONG_SECRET_KEY', // Replace with a strong, unique secret key
+    secret: 'YOUR_STRONG_SECRET_KEY',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production', // Ensure secure cookies in production
-        httpOnly: true, // Prevent client-side JavaScript from accessing cookies
-        maxAge: 3600000 // Example: 1 hour session duration (in milliseconds)
+        secure: true, // Now we can confidently set secure to true in production
+        httpOnly: true,
+        maxAge: 3600000
     }
 }));
 
@@ -45,15 +48,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Login Route
 app.get('/login', (req, res) => {
+    const protocol = req.protocol; // This should now correctly reflect HTTPS
+    const host = req.get('host');
+    const redirectUri = `${protocol}://${host}/auth/callback`;
+
     const authCodeUrlParameters = {
         scopes: ['user.read'],
-        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
-        state: uuidv4() // Add state parameter for security
+        redirectUri,
+        state: uuidv4()
     };
 
     pca.getAuthCodeUrl(authCodeUrlParameters)
         .then((response) => {
-            req.session.authCodeRequest = { state: authCodeUrlParameters.state }; // Store state for validation
+            req.session.authCodeRequest = { state: authCodeUrlParameters.state };
             res.redirect(response);
         })
         .catch((error) => {
@@ -64,6 +71,10 @@ app.get('/login', (req, res) => {
 
 // Callback Route
 app.get('/auth/callback', async (req, res) => {
+    const protocol = req.protocol; // This should now correctly reflect HTTPS
+    const host = req.get('host');
+    const redirectUri = `${protocol}://${host}/auth/callback`;
+
     const { code, state, error, error_description } = req.query;
 
     if (error) {
@@ -79,14 +90,14 @@ app.get('/auth/callback', async (req, res) => {
     const tokenRequest = {
         code,
         scopes: ['user.read'],
-        redirectUri: `${req.protocol}://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        redirectUri,
         state
     };
 
     try {
         const response = await pca.acquireTokenByCode(tokenRequest);
         req.session.user = response.account;
-        delete req.session.authCodeRequest; // Clear the stored state
+        delete req.session.authCodeRequest;
         res.redirect('/');
     } catch (error) {
         console.error('Error acquiring token:', error);
@@ -94,125 +105,7 @@ app.get('/auth/callback', async (req, res) => {
     }
 });
 
-// Logout Route
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Error destroying session:', err);
-            return res.status(500).send('Error logging out.');
-        }
-        res.redirect('/'); // Redirect to the homepage or a logout success page
-    });
-});
-
-// Main Route
-app.get('/', async (req, res) => {
-    let userName = 'Guest';
-    let loginLink = '<a href="/login">Login</a>';
-    let logoutLink = '';
-
-    if (req.session.user) {
-        userName = req.session.user.username || req.session.user.name; // Try to get username or name
-        loginLink = '';
-        logoutLink = '<a href="/logout">Logout</a>';
-    }
-
-    res.send(`
-        <!DOCTYPE html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>File Upload to Azure Blob Storage</title>
-            <style>
-                /* Add your CSS styles here */
-            </style>
-        </head>
-        <body>
-            <div class="top-nav">
-                <h1>Azure File Upload</h1>
-                <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="#">About</a></li>
-                    <li><a href="#">Contact</a></li>
-                    ${logoutLink}
-                </ul>
-            </div>
-            <div class="sidebar">
-                <ul>
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a href="#">Upload Files</a></li>
-                    <li><a href="#">Settings</a></li>
-                    <li><a href="#">Help</a></li>
-                </ul>
-            </div>
-            <div class="main-content">
-                <div class="form-container">
-                    <h1>Welcome, ${userName}!</h1>
-                    ${loginLink}
-                    <h2>Upload Files to Azure Blob Storage</h2>
-                    <form id="uploadForm" enctype="multipart/form-data">
-                        <div>
-                            <label for="section1">Section 1:</label>
-                            <input type="file" id="section1" name="section1">
-                        </div>
-                        <div>
-                            <label for="section2">Section 2:</label>
-                            <input type="file" id="section2" name="section2">
-                        </div>
-                        <div>
-                            <label for="section3">Section 3:</label>
-                            <input type="file" id="section3" name="section3">
-                        </div>
-                        <div>
-                            <label for="section4">Section 4:</label>
-                            <input type="file" id="section4" name="section4">
-                        </div>
-                        <div>
-                            <label for="section5">Section 5:</label>
-                            <input type="file" id="section5" name="section5">
-                        </div>
-                        <button type="button" onclick="uploadFiles()">Upload Files</button>
-                    </form>
-                    <p>Choose one file for each section and click "Upload Files".</p>
-                </div>
-            </div>
-            <script>
-                async function uploadFiles() {
-                    const formData = new FormData(document.getElementById('uploadForm'));
-                    try {
-                        const response = await fetch('/upload', {
-                            method: 'POST',
-                            body: formData
-                        });
-                        const result = await response.json();
-                        if (response.ok) {
-                            alert('Files uploaded successfully!');
-                        } else {
-                            alert(\`Error: \${result.message}\`);
-                        }
-                    } catch (error) {
-                        console.error('Error uploading files:', error);
-                        alert('An error occurred while uploading files.');
-                    }
-                }
-            </script>
-        </body>
-        </html>
-    `);
-});
-
-// Endpoint to handle file uploads (You'll need to implement this)
-app.post('/upload', upload.any(), async (req, res) => {
-    try {
-        console.log('Files received:', req.files);
-        // Implement your Azure Blob Storage upload logic here
-        res.json({ message: 'Files uploaded successfully!' });
-    } catch (error) {
-        console.error('Error handling file upload:', error);
-        res.status(500).json({ message: 'Failed to upload files.' });
-    }
-});
+// ... (rest of your code remains the same)
 
 // Start the server
 const PORT = process.env.PORT || 3000;
