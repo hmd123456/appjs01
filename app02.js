@@ -11,9 +11,9 @@ const app = express();
 // MSAL Configuration (Replace placeholders with your actual values)
 const msalConfig = {
     auth: {
-        clientId: 'YOUR_CLIENT_ID', // Replace with your Azure AD App's Client ID
-        authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // Replace with your Tenant ID
-        clientSecret: 'YOUR_CLIENT_SECRET' // Replace with your Azure AD App's Client Secret
+        clientId: '9967', // Replace with your Azure AD App's Client ID
+        authority: 'https://login.microsoftonline.com/5558459a-5e38-45de-8742-ec475127560c', // Replace with your Tenant ID
+        clientSecret: '2a051337' // Replace with your Azure AD App's Client Secret
     },
     system: {
         loggerOptions: {
