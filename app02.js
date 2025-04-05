@@ -48,7 +48,7 @@ app.use(express.urlencoded({ extended: false })); // Add middleware to parse URL
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
         scopes: ["openid", "profile", "email", "user.read"], // Add 'user.read' scope if needed for token acquisition
-        redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        redirectUri: `https://${req.get('host')}/.auth/login/aad/callback`, // Dynamically build redirect URI
         state: uuidv4() // Add state parameter for security
     };
 
@@ -64,7 +64,7 @@ app.get('/login', (req, res) => {
 });
 
 // Callback Route
-app.get('/auth/callback', async (req, res) => {
+app.get('/.auth/login/aad/callback', async (req, res) => {
     const { code, state, error, error_description } = req.query;
 
     if (error) {
@@ -80,7 +80,7 @@ app.get('/auth/callback', async (req, res) => {
     const tokenRequest = {
         code: code, // Use the code from the query parameters
         scopes: ['openid', 'profile', 'email', 'user.read'], // Ensure the scopes match what you need
-        redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
+        redirectUri: `https://${req.get('host')}/.auth/login/aad/callback`, // Dynamically build redirect URI
         state: state // Use the state from the query parameters for validation
     };
 
