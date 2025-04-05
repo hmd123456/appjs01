@@ -11,9 +11,6 @@ const app = express();
 // MSAL Configuration (Replace placeholders with your actual values)
 const msalConfig = {
     auth: {
-        grant_type: authorization_code,
-        code:authorization-code-from-url, // Replace with the actual authorization code from the URL
-        scope: 'openid profile email',
         clientId: '7e4216be-1710-425f-a15a-3b672c0e7d81', // Replace with your Azure AD App's Client ID
         authority: 'https://login.microsoftonline.com/5558459a-5e38-45de-8742-ec475127560c', // Replace with your Tenant ID
         clientSecret: 'I8j8Q~tnzpUiiDF8cOYEug9AETuW9pQezzMcUak0' // Replace with your Azure AD App's Client Secret
@@ -45,14 +42,14 @@ app.use(session({
 
 // Middleware to serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: false })); // Add middleware to parse URL-encoded bodies
 
 // Login Route
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
-        
-        scopes: ["openid", "profile", "email"],
+        scopes: ["openid", "profile", "email", "user.read"], // Add 'user.read' scope if needed for token acquisition
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
-       // state: uuidv4() // Add state paramdddeter for security
+        state: uuidv4() // Add state parameter for security
     };
 
     pca.getAuthCodeUrl(authCodeUrlParameters)
@@ -81,10 +78,10 @@ app.get('/auth/callback', async (req, res) => {
     }
 
     const tokenRequest = {
-        code: req.query.code,
-        scopes: ['user.read'],
+        code: code, // Use the code from the query parameters
+        scopes: ['openid', 'profile', 'email', 'user.read'], // Ensure the scopes match what you need
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
-        state: req.session.authCodeRequest.state // Use stored state for validation
+        state: state // Use the state from the query parameters for validation
     };
 
     try {
