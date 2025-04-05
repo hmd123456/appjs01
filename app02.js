@@ -46,9 +46,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Login Route
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
-        scopes: ['user.read'],
+        scopes: ["openid", "profile", "email"],
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
-        state: uuidv4() // Add state parameter for security
+       // state: uuidv4() // Add state paramdddeter for security
     };
 
     pca.getAuthCodeUrl(authCodeUrlParameters)
