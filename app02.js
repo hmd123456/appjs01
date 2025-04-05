@@ -11,6 +11,9 @@ const app = express();
 // MSAL Configuration (Replace placeholders with your actual values)
 const msalConfig = {
     auth: {
+        grant_type: authorization_code,
+        code:authorization-code-from-url, // Replace with the actual authorization code from the URL
+        scope: 'openid profile email',
         clientId: '7e4216be-1710-425f-a15a-3b672c0e7d81', // Replace with your Azure AD App's Client ID
         authority: 'https://login.microsoftonline.com/5558459a-5e38-45de-8742-ec475127560c', // Replace with your Tenant ID
         clientSecret: 'I8j8Q~tnzpUiiDF8cOYEug9AETuW9pQezzMcUak0' // Replace with your Azure AD App's Client Secret
@@ -46,6 +49,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Login Route
 app.get('/login', (req, res) => {
     const authCodeUrlParameters = {
+        
         scopes: ["openid", "profile", "email"],
         redirectUri: `https://${req.get('host')}/auth/callback`, // Dynamically build redirect URI
        // state: uuidv4() // Add state paramdddeter for security
