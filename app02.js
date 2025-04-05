@@ -28,7 +28,7 @@ const msalConfig = {
 
 const pca = new PublicClientApplication(msalConfig);
 
-// Session Middleware Configuration
+// Session Middleware Configuration yes
 app.use(session({
     secret: 'YOUR_STRONG_SECRET_KEY', // Replace with a strong, unique secret key
     resave: false,
